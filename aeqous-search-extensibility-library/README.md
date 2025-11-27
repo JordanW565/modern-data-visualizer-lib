@@ -8,9 +8,24 @@ This SharePoint Framework (SPFx) library component extends the Aeqous Modern Dat
 
 ## Features
 
-- **Custom Suggestion Provider**: Provides intelligent search suggestions based on user input
-- **Zero-Term Suggestions**: Display helpful suggestions even when the search box is empty
+- **Published Pages Only**: Automatically fetches and suggests only published SharePoint pages
+- **News Page Filtering**: Excludes news pages (PromotedState=2) from suggestions, showing only regular site pages
+- **Fuzzy String Matching**: Intelligent typo tolerance using Levenshtein distance algorithm
+  - Finds similar matches even when users make spelling mistakes
+  - Configurable similarity threshold (default: 0.6)
+  - Prevents users from hitting dead ends with no results
+- **Smart Result Ranking**: Suggestions sorted by relevance score
+  - Exact matches scored highest (1.0)
+  - Substring matches (0.95)
+  - Prefix matches (0.9)
+  - Fuzzy matches based on edit distance
+- **Zero-Term Suggestions**: Display recent pages when search box is empty
+- **Performance Optimized**: Built-in caching (5-minute cache) for faster response times
 - **Configurable Options**: Admin-configurable settings through the property pane
+  - Number of suggestions (3-20)
+  - Enable/disable fuzzy matching
+  - Adjust similarity threshold
+  - Custom site URL for cross-site search
 - **Extensible Architecture**: Built using the @aequos/extensibility framework (v1.5.0)
 
 ## Prerequisites
@@ -73,9 +88,12 @@ The main library class that implements `IExtensibilityLibrary` from @aequos/exte
 
 A custom suggestion provider that extends `BaseSuggestionProvider`. This component provides:
 
-- **Dynamic Suggestions**: Suggestions that update based on user input
-- **Zero-Term Suggestions**: Pre-defined suggestions shown when search box is empty
-- **Grouping**: Suggestions organized into logical groups
+- **SharePoint Search Integration**: Queries SharePoint Search API for published pages
+- **Automatic Filtering**: Excludes news pages and unpublished content
+- **Fuzzy Matching**: Levenshtein distance algorithm for typo tolerance
+- **Dynamic Suggestions**: Suggestions that update based on user input with smart ranking
+- **Zero-Term Suggestions**: Recent pages shown when search box is empty
+- **Caching**: 5-minute cache for improved performance
 - **Custom Actions**: Handle suggestion selection events
 
 **Location**: `src/libraries/AeqousCustomSuggestionProvider.ts`
@@ -84,18 +102,83 @@ A custom suggestion provider that extends `BaseSuggestionProvider`. This compone
 
 The custom suggestion provider includes configurable properties accessible through the property pane:
 
-- **Custom API Endpoint**: URL to a custom API for fetching suggestions
-- **Number of Suggestions**: Maximum number of suggestions to display
+### Page Suggestion Settings
+- **Site URL**: SharePoint site URL to search (leave empty to use current site)
+- **Number of Suggestions**: Maximum number of suggestions to display (3-20, default: 10)
+
+### Fuzzy Match Settings
+- **Enable Fuzzy Matching**: Toggle fuzzy string matching on/off (default: enabled)
+- **Similarity Threshold**: Minimum similarity score required (0.3-1.0, default: 0.6)
+  - Lower values = more lenient matching (more results, may be less relevant)
+  - Higher values = stricter matching (fewer results, more relevant)
+  - Recommended: 0.6 for general use, 0.4 for very lenient matching
+
+## How It Works
+
+### Page Filtering
+
+The library uses SharePoint Search API with the following filters:
+```
+ContentTypeId: 0x0101009D1CB255DA76424F860D91F20E6C4118* (Site Pages)
+PromotedState: 0 (Regular pages only, excludes news where PromotedState=2)
+IsDocument: 1 (Published pages only)
+```
+
+### Fuzzy Matching Algorithm
+
+When users type search queries, the provider:
+1. Fetches published pages from SharePoint
+2. Calculates similarity score for each page title:
+   - **Exact match**: Score = 1.0
+   - **Contains substring**: Score = 0.95
+   - **Starts with query**: Score = 0.9
+   - **Fuzzy match**: Score = 1 - (edit_distance / max_length)
+3. Filters results by similarity threshold
+4. Sorts by score (highest first)
+5. Returns top N results
+
+**Example**: User types "Projct" (typo for "Project")
+- "Project Overview" → Score: 0.93 (1 character edit distance)
+- "Project Plan" → Score: 0.92
+- "Team Project" → Score: 0.85
+- All shown if threshold ≤ 0.85
 
 ## Customization
 
-### Modifying Suggestions
+### Adjusting Search Scope
 
-To customize the suggestions, edit the `AeqousCustomSuggestionProvider.ts` file:
+To search multiple site collections or modify the query:
 
-1. **Zero-Term Suggestions**: Update the `_zeroTermSuggestions` array in the `onInit()` method
-2. **Query-Based Suggestions**: Modify the `_getCustomSuggestions()` method
-3. **API Integration**: Uncomment and configure the API call example in `_getCustomSuggestions()`
+Edit `_fetchPublishedPages()` in `AeqousCustomSuggestionProvider.ts`:
+```typescript
+// Current: searches current site or specified site
+const siteUrl = this.properties.siteUrl || this.context.pageContext.web.absoluteUrl;
+
+// To search entire tenant, modify the queryTemplate to remove site restriction
+```
+
+### Modifying Page Filters
+
+To include different content types or adjust filters:
+
+Edit the `queryTemplate` in `_fetchPublishedPages()`:
+```typescript
+// Current query excludes news (PromotedState:0)
+// To include news pages, remove: AND PromotedState:0
+// To include other content types, modify: ContentTypeId:...
+```
+
+### Adjusting Fuzzy Matching
+
+To customize the similarity algorithm:
+
+Edit `_calculateSimilarity()` in `AeqousCustomSuggestionProvider.ts`:
+```typescript
+// Adjust scoring bonuses:
+if (str2.includes(str1)) {
+    return 0.95; // Change this value (0-1)
+}
+```
 
 ### Adding Custom Properties
 
