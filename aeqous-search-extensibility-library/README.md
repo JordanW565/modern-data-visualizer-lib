@@ -35,20 +35,41 @@ Before using this library, ensure you have:
 - SharePoint Online environment
 - Modern Data Visualizer v1.5.4 or compatible version installed
 - SharePoint App Catalog (tenant or site collection level)
-- Node.js v10.24.1 (as specified in `.nvmrc`)
+
+### For Development/Building
+
+- **Node.js v10.24.1** (or v12.13.0 - v14.x) - **REQUIRED**
+- npm v6.x
 - SPFx 1.12.1
+
+⚠️ **IMPORTANT**: This project **must** be built with Node.js v10-14. Building with Node.js v15+ will fail due to SPFx 1.12.1 and node-sass incompatibilities. See [BUILD.md](BUILD.md) for detailed build instructions.
 
 ## Installation
 
+### Quick Start (Pre-built Package)
+
+If you have a pre-built `.sppkg` file, skip to [Step 2](#step-2-deploy-to-app-catalog).
+
 ### Step 1: Build the Solution
 
+**⚠️ Node Version Requirement**: You must use Node.js v10.24.1 (or v12-14) to build this solution.
+
 ```bash
+# Verify Node version first
+node --version
+# Should output v10.x, v12.x, or v14.x
+
+# If wrong version, use nvm to switch:
+nvm use 10.24.1
+
 # Install dependencies
 npm install
 
 # Build and package the solution
 npm run build
 ```
+
+For detailed build instructions, troubleshooting, and Docker alternatives, see **[BUILD.md](BUILD.md)**.
 
 This will create a `.sppkg` file in the `sharepoint/solution` folder.
 
