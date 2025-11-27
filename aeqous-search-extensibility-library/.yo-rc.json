@@ -1,0 +1,12 @@
+{
+  "@microsoft/generator-sharepoint": {
+    "version": "1.12.1",
+    "libraryName": "aeqous-search-extensibility-library",
+    "libraryId": "8f7a9c2e-5b3d-4a1f-9e8c-7d6e5f4a3b2c",
+    "environment": "spo",
+    "packageManager": "npm",
+    "isCreatingSolution": true,
+    "isDomainIsolated": false,
+    "componentType": "library"
+  }
+}

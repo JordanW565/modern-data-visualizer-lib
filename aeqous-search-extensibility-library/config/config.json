@@ -1,0 +1,18 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/spfx-build/config.2.0.schema.json",
+  "version": "2.0",
+  "bundles": {
+    "aeqous-search-library": {
+      "components": [
+        {
+          "entrypoint": "./lib/libraries/aeqousSearchLibrary/AeqousSearchLibrary.js",
+          "manifest": "./src/libraries/aeqousSearchLibrary/AeqousSearchLibrary.manifest.json"
+        }
+      ]
+    }
+  },
+  "externals": {},
+  "localizedResources": {
+    "AeqousSearchLibraryStrings": "lib/libraries/aeqousSearchLibrary/loc/{locale}.js"
+  }
+}
